@@ -1,0 +1,210 @@
+PROJECT: DELETE ALL APP
+$ oc delete all -l app=<APP_NAME>
+
+DEPLOYMENT STRATEGY
+- oc patch dc/mysql --patch '{"spec":{"strategy":{"type":"Recreate"}}}'
+
+COMPLETION
+$ oc completion bash > oc_bash_completion
+Copy the file to /etc/bash_completion.d/.
+$ sudo cp oc_bash_completion /etc/bash_completion.d/
+
+
+DOCKERFILE: PERMESSI
+RUN chgrp -R 0 /some/directory && \
+    chmod -R g=u /some/directory
+USER 1001
+
+
+CREAZIONE IMMAGINI S2i e push in registry
+1) $ s2i create _<image name>_ _<destination directory>_ 	// creo la struttura
+2) $ podman build -t <builder_image_name>					// buildo immagine
+2b) $ podman run <builder_image_name> .						// run e stop per testare
+3) $ s2i build file:///path-to-sample-app _<BUILDER_IMAGE_NAME>_ _<OUTPUT_APPLICATION_IMAGE_NAME>_
+4) $ podman login -u
+5) Sudo skopeo copy containers-storage:localhost/<OUTPUT_APPLICATION_IMAGE_NAME> docker://quay.io/fabriziocastelli/<OUTPUT_APPLICATION_IMAGE_NAME>
+6) creo progetto common
+7) podman login 
+8) oc create secret generic quayio --from-file .dockerconfigjson=${XDG_RUNTIME_DIR}/containers/auth.json --type kubernetes.io/ockerconfigjson
+9) oc import-image --from docker://quay.io/fc/image --confirm --reference-policy local
+10) creo new-project
+11) oc policy add-role-to-group -n common system:image-puller system:serviceaccounts:new-project
+12) oc new-app --as-deployment-config common/shared
+
+REFERENCE IMAGES ACROSS PROJECTS (pods in project referenziano images in project b)
+$ oc policy add-role-to-user \
+    system:image-puller system:serviceaccount:project-a:default \
+    --namespace=project-b
+
+REFERENCE IMAGES FROM OTHER SECURED REGISTRIES
+1) $ oc create secret generic <pull_secret_name> \
+    --from-file=.dockerconfigjson=<path/to/.docker/config.json> \
+    --type=kubernetes.io/dockerconfigjson
+2) $ oc secrets link default <pull_secret_name> --for=pull
+
+TEMPLATE: UPLOAD
+$ oc create -f <filename>
+
+TEMPLATE: LIST PARAMETERS
+$ oc process --parameters -f <filename>
+
+TEMPLATE: MODIFY UPLOADED
+$ oc edit template <template>
+
+TEMPLATE: QUICKSTART
+$ oc get templates -n openshift
+
+TEMPLATE: VALUE
+-  ${PARAMETER_NAME}
+
+
+TEMPLATE: PARAMETERS
+ parameters:
+  - name: SOURCE_REPOSITORY_URL 
+    displayName: Source Repository URL 
+    description: The URL of the repository with your application source code 
+    value: https://github.com/sclorg/cakephp-ex.git 
+    required: true 
+  - name: GITHUB_WEBHOOK_SECRET
+    description: A secret string used to configure the GitHub webhook
+    generate: expression 
+    from: "[a-zA-Z0-9]{40}" 
+  - name: REPLICA_COUNT
+    description: Number of replicas to run
+    value: "2"
+    required: true
+
+TEMPLATE: EXPORT FROM EXISTING OBJECTS
+$ oc get -o yaml --export all > <yaml_filename>
+
+ROUTE: EXPOSE
+$ oc expose svc <NOME_APP>
+
+ROUTE: GET
+$ oc get route <NOME_APP>
+
+SECRETS
+$ oc secrets link builder <SECRET> //quando input image richiede il pull secret
+
+START NEW_BUILD
+$ oc start-build bc/<APP_NAME>
+
+START NEW DC
+$ oc rollout latest dc/<APP_NAME>
+
+PROBE: LIVENESS/READINESS
+$ oc set probe dc/<APP_NAME> --liveness \
+ --get-url=http://:8080/<READINESS/LIVENESS_URL> \
+ --initial-delay-seconds=30 --timeout-seconds=2
+
+TRIGGER: IMAGE_CHANGE
+$ oc set triggers dc/name \
+ --from-image=myproject/origin-ruby-sample:latest -c helloworld
+
+EXTERNAL_SERVICE
+$ oc create service externalname <SERVICE_NAME> \
+ --external-name <myhost.example.com>
+
+CHECK JSON FILE
+$ python -n json-tool <NOME_FILE.json>
+
+CREAZIONE APP
+$ oc new-app --as-deployment-config --name <NOME_APP>\
+ -i <IMAGE_STREAM> <GITHUB_SOURCE>#<BRANCH_NAME>
+ --context-dir <DIR>
+
+DOCKERFILE:SECURITY CONTEXT 
+  RUN chgrp -R 0 <PATH/DIR>
+      chmod -R g=u <PATH/DIR>
+  USER 1001
+
+DOCKERFILE: RUN AS ROOT
+1) $ oc create service account <MY_SERVICE_ACCOUNT>
+2) $ oc patch dc/<NOME_APP> --patch \
+	'{"spec":{"template":{"spec":{"serviceAccountName": "<MY_SERVICE_ACCOUNT"}}}}'
+3) $ oc adm policy add-scc-to-user anyuid -z <MY_SERVICE_ACCOUNT>
+
+CONFIGMAP/SECRET: CREATE
+$ oc create configmap <CONFMAP_NAME> --from-literal K1=V1 --from-literal K2=V2
+$ oc create configmap <CONFMAP_NAME> --from-file <PATH_TOFILE>
+
+CONFIGMAP: EDIT
+$ oc patch configmap/<CONF_NAME> --patch '{"data":{"K1":"NV1"}}'
+
+SECRET: CREATE
+$ oc create secret generic <SECR_NAME>
+-- from literal K1=V1
+
+CONFIGMAP/SECRET: INJECTING AS ENV VARIABLE
+$ oc set env dc/mydcname --from configmap/myconf
+
+CONFIGMAP/SECRET: INJECTING AS VOLUME
+$ oc set volume dc/mydcname --add \
+	- t configmap -m /PATH/TO/VOL \
+	--name <MYVOL> --configmap-name <MYCONF_NAME>
+
+STOP TRIGGERING FROM SET ENV
+$ oc set triggers dc/mycname --from-config --remove
+
+REENABLE TRIGGERING FROM SET ENV
+$ oc set triggers dc/mycname --from-config 
+
+TOKEN: SECRET FOR PULLING
+$ oc secrets link default <NOME_SECRET> --for pull
+
+TOKEN: SECRET FOR PUSHING
+$ oc secrets link builder <NOME_SECRET>
+
+CREAZIONE APP DA IMMAGINE QUAY.io
+$ oc new-app --as-dpeloyment-config --name MYNAME \
+  --docker-image quay.io/fc/nomeimmagine //NB: per usala, secret per pulling o pushing se la vuoi usare nella stesso project, altrimenti anche aggiugnere dd-role-to-group
+  
+CREAZIONE APP DA TEMPLATE
+$ oc new-app --file=quotes-template.yaml  
+
+REGISTRY: ESTERNO (pg 28 su registry)
+1) $ oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec": {"defaultRoute":true}}' --type=merge
+2) $ HOST=$(oc get route default-route -n openshift-image-registry --template='{{ .spec.host }}')
+3) $ podman login -u $(oc whoami) -p $(oc whoami -t) --tls-verify=false $HOST 
+
+
+REGISTRY: AUTENTICAZIONE INTERNA
+1) $ TOKEN=${oc whoami -t}
+2) $ sudo podman login -u "USER" -p ${TOKEN} \
+	default-route-openshift-image-registry.DOMAIN:EXAMPLE.COM
+
+IMPORT IMAGE
+oc import-image myimagestream:1.0 --confirm  --from registry/myorg/myimage
+
+IMPORT IMAGE sENZA BISOGNO DI UN ACCESS TOKEN
+oc import-image myimagestream:1.0 --confirm --reference-policy local --from registry/myorg/myimage
+
+BUILDCONF: AUMENTARE VERBOSITY
+oc set env bc/name BUILD_LOGLEVEL=4
+
+BUILDCONF: CHECK TRIGGERS
+oc describe bc/name
+
+BUILDCONF: ADD IMAGE CHANGE TRIGGERS
+oc set triggers bc/name --from-image=project:image:tag
+
+BUILDCONF: ADD GITHUB WEBHOOK TRIGGER
+oc set triggers bc/name --from-github
+
+BUILDCONF: ADD POST-COMMIT BUILD-HOOK
+oc set build-hook bc/name --post-commit --script="curl http://..."
+oc set build-hook bc/name --post-commit --command -- bundle exec rake test --verbose
+
+ESERCIZIO BUILDHOOK CHIMAMATA : pg 208
+
+S2I : DOCKERFILE
+FROM registry.access.redhat.com/ubi8/ubi:8.0
+LABEL io.k8s.description="My custom Builder" \
+	io.k8s.display-name="Nginx 1.6.3" \
+	io.openshift.expose-services="8080:http" \ // porte da esporre
+	io.openshift.tags="builder,webserver,html,nginx" \
+	io.openshift.s2i.scripts-url="image:///usr/libexec/s2i" // dove metterli
+RUN yum install...
+EXPOSE 8080
+COPY ./s2i/bin/ /usr/libexec/s2i // importante!!!!!!!
+
