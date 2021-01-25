@@ -1,6 +1,7 @@
 # podman & skopeo
-sudo yum install -y podman
-sudo yum install -y skopeo
+sudo yum -y install podman
+sudo curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_7/devel:kubic:libcontainers:stable.repo
+sudo yum -y install skopeoudo yum install -y skopeo
 
 # install s2i
 mkdir /tmp/s2i/ && cd /tmp/s2i/ 
@@ -19,5 +20,5 @@ sudo mv s2i /usr/local/bin
 rm -rf /tmp/s2i/
 
 # utils
-sudo yum install -y tree
+sudo yum -y install tree
 
