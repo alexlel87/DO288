@@ -209,3 +209,6 @@ RUN yum install...
 EXPOSE 8080
 COPY ./s2i/bin/ /usr/libexec/s2i // importante!!!!!!!
 
+FIND A FILE RECURSIVELY FROM A PATH
+find . -name "foo*"
+
