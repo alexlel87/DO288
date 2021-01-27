@@ -212,3 +212,8 @@ COPY ./s2i/bin/ /usr/libexec/s2i // importante!!!!!!!
 FIND A FILE RECURSIVELY FROM A PATH
 find . -name "foo*"
 
+LIST ENVIRONEMTN VARIABLES OF A POD
+oc rsh app-1-1z789 env | grep VAR
+
+QUANDO IMMAGINE INIZIA CON RHSCL
+new-app --as-deployment-config --name NAME --docker-image registry.access.redhat.com/rhscl/<image_name> -e (eventualmente, senno inietto dopo come env confmaps/secrets)
