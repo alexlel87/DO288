@@ -384,7 +384,7 @@ parameters:
 - displayName: To Do List back-end Git repository URL
   name: BACK_END_REPO
   required: true
-  value: https://github.com/jairof002/DO288-apps
+  value: https://github.com/fabriziocastelli/DO288-apps
 - displayName: To Do List back-end project root folder
   name: BACK_END_CTXDIR
   required: true
@@ -396,7 +396,7 @@ parameters:
 - displayName: Npm modules repository URL
   name: NPM_PROXY
   required: true
-  value: http://nexus-common.apps.na45.prod.nextcle.com/repository/nodejs
+  value: https://registry.npmjs.org/
 - displayName: Secret for webhooks
   name: SECRET
   required: true
