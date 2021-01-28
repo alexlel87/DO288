@@ -22,3 +22,11 @@ rm -rf /tmp/s2i/
 # utils
 sudo yum -y install tree
 
+# Java && mvn
+sudo yum install  -y java-1.8.0-openjdk-devel
+wget http://mirror.olnevhost.net/pub/apache/maven/binaries/apache-maven-3.1.1-bin.zip
+mkdir maven
+unzip apache-maven-3.1.1-bin.zip -d maven
+export M2_HOME=${HOME}/maven/apache-maven-3.1.1
+export M2=$M2_HOME/bin
+export PATH=$M2:$PATH

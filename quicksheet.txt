@@ -220,3 +220,11 @@ new-app --as-deployment-config --name NAME --docker-image registry.access.redhat
 
 DRY-RUN TEMPLATE(per check template se è ok)
 oc new-app --dry-run -f template.yaml -p K1=V1 -p K2=V2
+
+TEMPLATE: CHECK Parameters
+oc process --parameters <template>
+
+TEMPLATE: CREATE TEMPL RESOURCE
+oc create -f <template.yaml>
+
+
